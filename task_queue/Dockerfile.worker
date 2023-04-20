@@ -1,0 +1,19 @@
+FROM python
+
+ENV PYTHONDONTWRITEBYTECODE=1
+
+ENV PYTHONUNBUFFERED=1
+
+WORKDIR /app-backend-worker
+
+RUN pip install --upgrade pip
+
+COPY ./requirements.txt /app-backend-worker/
+
+RUN pip install -r requirements.txt
+
+COPY . /app-backend-worker/
+
+
+
+CMD ["sh", "-c", "sleep 50 && python /app-backend-worker/tasks/worker.py"]

@@ -1,0 +1,66 @@
+version: '3.7'
+
+services:
+    frontend:
+      build: ./frontend
+      ports:
+        - "3000:3000"
+      depends_on:
+        - backend
+      networks:
+        - rebbit-network
+
+    backend:
+      build: 
+        context: ./task_queue
+        dockerfile: Dockerfile.task
+      ports:
+        - "8000:8000"
+      depends_on:
+        - rabbitmq
+      networks:
+        - rebbit-network
+      # environment:
+      #   - RABBITMQ_HOST=rabbitmq
+    
+    db:
+      image: mongo:5.0.16-focal
+      ports:
+        - "27017:27017"
+      environment:
+        RABBITMQ_DEFAULT_USER: guest
+        RABBITMQ_DEFAULT_PASS: guest
+      restart: always
+      volumes:
+        - mongo-data:/data/db
+      networks:
+        - rebbit-network
+
+    rabbitmq:
+      image: rabbitmq:3-management
+      ports:
+        - "5672:5672"
+        - "15672:15672"
+      networks:
+        - rebbit-network
+
+    worker:
+      build: 
+        context: ./task_queue
+        dockerfile: Dockerfile.worker
+      restart: always
+      depends_on:
+        - db
+        - rabbitmq
+      networks:
+        - rebbit-network
+      # environment:
+      #   - RABBITMQ_HOST=rabbitmq
+
+volumes:
+  mongo-data:
+    driver: local
+
+networks:
+  rebbit-network:
+    driver: bridge
